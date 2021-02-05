@@ -78,8 +78,7 @@ app.get('/', (req, res) => res.send('Hello test'));
 
 // ポート3000でサーバを立てる
 //app.listen(3000, () => console.log('Listening on port 3000'));
-app.listen(PORT, () => console.log('Listening on port 3000'));
+//Heroku へデプロイした際は、ポートは process.env.PORT が適用される
+app.listen(process.env.PORT || PORT, () => console.log('Listening on port 3000'));
 
 
-
-//vv
