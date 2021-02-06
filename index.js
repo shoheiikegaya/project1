@@ -6,6 +6,10 @@
 // expressモジュールを読み込む
 const express = require('express');
 const jwt = require("jsonwebtoken");
+var config = require('./config');
+const dbAcc = require('./dbAccess.js');
+const hash = require('./hashCreator');
+
 const PORT = 3000;
 
 // expressアプリを生成する
@@ -17,16 +21,55 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
 //2鍵
-const SECRET_KEY = "abcdefg";
+//const SECRET_KEY = "abcdefg";
+const SECRET_KEY = config.secret;
 
 //3JWT発行API
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
+
+  //name:ikegaya
+  //password:password1
+  const objHash = new hash(req.body.password);
+  bufHash = objHash.hashCreate();
+  //console.log('bufHash=' + bufHash);
+
+  let reqName=req.body.name;
+  let reqPassword=bufHash;
+
+  const dbInstance = new dbAcc();
+  let result = await dbInstance.asyncPromiseLoginChk(reqName);
+  //console.log(result);
+  let bufName=result.Name;
+  let bufPassword=result.Password;
+
+  // validation
+  if (reqName!=bufName) {
+    res.json({
+      success: false,
+      message: 'User not found.',
+      token: null
+    });
+    return;
+  }
+  if (reqPassword!=bufPassword) {
+    res.json({
+      success: false,
+      message: 'Password is wrong.',
+      token: null
+    });
+    return;
+  }
+
+
+
   // 動作確認用に全ユーザーログインOK
   const payload = {
       user: req.body.user
+      //user: 'ikegaya'
   };
   const option = {
       expiresIn: '1m'
+      //expiresIn: '24h'
   }
   const token = jwt.sign(payload, SECRET_KEY, option);
   res.json({
